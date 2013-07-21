@@ -2,14 +2,15 @@
 
 const unsigned char num[] = {0b00111111, 0b00000110, 0b01011011, 0b01001111, 0b01100110, 0b01101101, 0b01111101, 0b00000111, 0b01111111, 0b01101111};
 
-void tm_send(unsigned char data) {
-    char i;
-    for(i = 0; i < 8; i++) {
-        TM_POUT &= ~TM_CLK; //low
-        TM_POUT = (TM_POUT & ~TM_DIO) | ((data & 1)?TM_DIO:0);
-        TM_POUT |= TM_CLK; // high
-        data >>= 1;
-    }
+inline void tm_send(unsigned char data) {
+    UCB0TXBUF = data;
+    while(!(UCB0STAT & UCBUSY)); //busywaiting!
+}
+
+inline unsigned char tm_recv() {
+    UCB0TXBUF = 0xFF;
+    while(!(UCB0STAT & UCBUSY)); //busywaiting!
+    return UCB0RXBUF;
 }
 
 void tm_cmd(unsigned char data) {
@@ -26,40 +27,40 @@ void tm_data(unsigned char data, unsigned char addr) {
     TM_POUT |= TM_STB;
 }
 
-void tm_init() {
-    char i;
-    TM_PDIR |= TM_DIO | TM_CLK | TM_STB;
-    TM_POUT |= TM_CLK | TM_STB;
-    
-    tm_cmd(0x40);
-    tm_cmd(0x88);
-    
+static void tm_clear() {
+    unsigned char i;
     TM_POUT &= ~TM_STB;
     tm_send(0xC0);
     for(i = 0; i < 16; i++) {
         tm_send(0x00);
     }
     TM_POUT |= TM_STB;
-    
 }
 
-unsigned char tm_recv() {
-    unsigned char temp = 0;
-    char i;
-    TM_PDIR &= ~TM_DIO;
-    TM_PREN |= TM_DIO;
+void tm_init() {
+    UCB0CTL1 |= UCSWRST;
     
-    for(i = 0; i < 8; i++) {
-        temp >>= 1;
-        TM_POUT &= ~TM_CLK;
-        temp |= (TM_PIN & TM_DIO)?0x80u:0;
-        TM_POUT |= TM_CLK;
-    }
+    UCB0CTL0 = UCMST | UCSYNC;
+    UCB0CTL1 = UCSSEL_2 | UCSWRST; // Still in reset while configuring
     
-    TM_PREN &= ~TM_DIO;
-    TM_PDIR |= TM_DIO;
+    IE2 &= ~(UCB0TXIE | UCB0RXIE);
+    IFG2 &= ~(UCB0TXIFG | UCB0RXIFG);
     
-    return temp;
+    TM_PDIR |= TM_MOSI | TM_CLK | TM_STB;
+    TM_PDIR &= ~TM_MISO;
+    TM_POUT |= TM_STB;
+    
+    UCB0BR0 = 16; // SMCLK/16 = 1mhz
+    UCB0BR1 = 0;
+    
+    UCB0STAT = 0;
+    
+    UCB0CTL1 &= ~UCSWRST; // OK Enable USCI_B0
+    
+    tm_cmd(0x40);
+    tm_cmd(0x88);
+    
+    tm_clear();
 }
 
 unsigned char tm_getButtons() {
