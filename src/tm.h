@@ -6,10 +6,10 @@
 #define TM_RED 1
 #define TM_GREEN 2
 
-#define TM_MOSI BIT7
-#define TM_MISO BIT6
-#define TM_CLK BIT5
-#define TM_STB BIT3
+#define TM_MOSI BIT2
+#define TM_MISO BIT1
+#define TM_CLK BIT4
+#define TM_STB BIT0
 
 #define TM_POUT P1OUT
 #define TM_PDIR P1DIR
@@ -18,7 +18,7 @@
 #define TM_PSEL2 P1SEL2
 #define TM_PREN P1REN
 
-void tm_init();
+void tm_init(unsigned char brightness);
 void tm_cmd(unsigned char data);
 void tm_data(unsigned char data, unsigned char addr);
 void tm_send(unsigned char data);
