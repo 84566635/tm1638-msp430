@@ -21,6 +21,8 @@ Since this module uses a single pin for input and output data, 3 extra component
 +-------------------+                   +--------------+
 ```
 
-Known Limitations
-=================
-The button-reading code is not really working now. Only button 1 is readable.
+Acknowledgements
+================
+Thanks [Kaipi](https://github.com/sergiocampama) for the base of the `Rakefile`.
+
+Thanks to several authors of libraries for different MCUs for the protocol in operation.
