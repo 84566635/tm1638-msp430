@@ -43,7 +43,7 @@ inline unsigned char tm_recv() {
 static void tm_spi_init() {
   TM_UCCTL1 |= UCSWRST;
   
-  TM_UCCTL0 = UCCKPL | UCMST | UCSYNC;
+  TM_UCCTL0 = UCCKPH | UCMST | UCSYNC;
   TM_UCCTL1 = UCSSEL_2 | UCSWRST; // Still in reset while configuring
   
   IE2 &= ~(TM_UCTXIE | TM_UCRXIE);
@@ -54,12 +54,12 @@ static void tm_spi_init() {
   TM_PSEL2 |= TM_MOSI | TM_CLK | TM_MISO;
   TM_POUT |= TM_STB;
   
-  TM_UCBR0 = 16; // SMCLK/16 = 1mhz
+  TM_UCBR0 = 32; // SMCLK/16 = 500 KHz (if faster, reads are erratic)
   TM_UCBR1 = 0;
   
   TM_UCSTAT = 0;
   
-  TM_UCCTL1 &= ~UCSWRST; // OK Enable USCI_B0
+  TM_UCCTL1 &= ~UCSWRST; // OK Enable USCI
 }
 
 static void tm_clear() {
@@ -75,10 +75,8 @@ static void tm_clear() {
 
 void tm_init(unsigned char brightness) {
     tm_spi_init();
-    //__delay_cycles(100000);
     tm_cmd(0x40);
     tm_cmd(0x80 | (brightness&0x0F));
-    
     tm_clear();
 }
 

@@ -43,7 +43,7 @@ int main() {
     t.h = t.m = t.s = 0;
     state = State_Normal;
     
-    tm_init(0x0f);
+    tm_init(0x08);
     
     _BIS_SR(GIE);
         
